@@ -1,0 +1,138 @@
+@extends('layouts.app')
+
+@section('titulo', $papeleta->codigo)
+
+@section('contenido')
+    <div class="bg-white rounded shadow p-4 mb-4">
+        <div class="flex justify-between items-start mb-3">
+            <h1 class="text-lg font-bold">{{ $papeleta->codigo }}</h1>
+            <span class="text-xs px-2 py-1 rounded whitespace-nowrap"
+                  style="background-color: {{ $papeleta->estado->color }}20; color: {{ $papeleta->estado->color }};">
+                {{ $papeleta->estado->nombre }}
+            </span>
+        </div>
+
+        <dl class="text-sm space-y-1 text-gray-700">
+            <div class="flex justify-between"><dt>Trabajador</dt><dd>{{ $papeleta->trabajador->name }}</dd></div>
+            <div class="flex justify-between"><dt>Destino</dt><dd>{{ $papeleta->destino }}</dd></div>
+            <div class="flex justify-between"><dt>Motivo</dt><dd>{{ $papeleta->motivo->nombre }}</dd></div>
+            <div class="flex justify-between"><dt>Fecha</dt><dd>{{ $papeleta->fecha_salida->format('d/m/Y') }}</dd></div>
+            <div class="flex justify-between">
+                <dt>Horario</dt>
+                <dd>{{ $papeleta->hora_salida_programada }} - {{ $papeleta->hora_retorno_programada ?? '—' }}</dd>
+            </div>
+            @if($papeleta->motivo_detalle)
+                <div class="pt-2 border-t mt-2">
+                    <dt class="text-gray-500">Detalle</dt>
+                    <dd>{{ $papeleta->motivo_detalle }}</dd>
+                </div>
+            @endif
+        </dl>
+    </div>
+
+    {{-- Acciones del Jefe / RRHH --}}
+    @can('decidir', $papeleta)
+        <div class="bg-white rounded shadow p-4 mb-4 space-y-3">
+            <h2 class="font-semibold text-sm">Acciones</h2>
+
+            <form method="POST" action="{{ route('papeletas.aprobar', $papeleta) }}">
+                @csrf
+                <button class="bg-green-600 text-white text-sm px-3 py-2 rounded w-full">Aprobar</button>
+            </form>
+
+            <form method="POST" action="{{ route('papeletas.rechazar', $papeleta) }}" class="space-y-2">
+                @csrf
+                <textarea name="comentario" required placeholder="Motivo del rechazo"
+                          class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+                <button class="bg-red-600 text-white text-sm px-3 py-2 rounded w-full">Rechazar</button>
+            </form>
+
+            <form method="POST" action="{{ route('papeletas.observar', $papeleta) }}" class="space-y-2">
+                @csrf
+                <select name="tipo" required class="w-full border rounded p-2 text-sm">
+                    <option value="ADMINISTRATIVA">Observación administrativa</option>
+                    <option value="JUSTIFICACION">Requiere justificación</option>
+                </select>
+                <textarea name="comentario" required placeholder="Detalle de la observación"
+                          class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+                <button class="bg-orange-500 text-white text-sm px-3 py-2 rounded w-full">Observar</button>
+            </form>
+        </div>
+    @endcan
+
+    {{-- Marcación GPS del trabajador --}}
+    @can('marcar', $papeleta)
+        <div class="bg-white rounded shadow p-4 mb-4">
+            <h2 class="font-semibold text-sm mb-3">Marcación</h2>
+
+            @if(!$papeleta->yaMarcoSalida())
+                <button onclick="marcar('salida')" class="bg-blue-600 text-white text-sm px-3 py-2 rounded w-full">
+                    Marcar Salida (GPS)
+                </button>
+            @elseif(!$papeleta->yaMarcoRetorno())
+                <button onclick="marcar('retorno')" class="bg-blue-600 text-white text-sm px-3 py-2 rounded w-full">
+                    Marcar Retorno (GPS)
+                </button>
+            @else
+                <p class="text-sm text-gray-500">Marcación completa.</p>
+            @endif
+            <p id="gps-status" class="text-xs text-gray-400 mt-2"></p>
+        </div>
+    @endcan
+
+    {{-- Historial simple --}}
+    <div class="bg-white rounded shadow p-4">
+        <h2 class="font-semibold text-sm mb-2">Historial</h2>
+        <ul class="text-xs text-gray-600 space-y-2">
+            @foreach($papeleta->historial as $item)
+                <li class="border-b pb-2 last:border-0">
+                    <span class="font-medium">{{ $item->accion }}</span>
+                    — {{ $item->usuario?->name ?? 'Sistema' }}
+                    <span class="text-gray-400">({{ $item->created_at->diffForHumans() }})</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+
+    @can('marcar', $papeleta)
+    <script>
+        function marcar(tipo) {
+            const status = document.getElementById('gps-status');
+            status.textContent = 'Obteniendo ubicación...';
+
+            if (!navigator.geolocation) {
+                status.textContent = 'Tu navegador no soporta geolocalización.';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = tipo === 'salida'
+                    ? '{{ route('papeletas.marcar-salida', $papeleta) }}'
+                    : '{{ route('papeletas.marcar-retorno', $papeleta) }}';
+
+                const campos = {
+                    _token: '{{ csrf_token() }}',
+                    latitud: pos.coords.latitude,
+                    longitud: pos.coords.longitude,
+                    precision_gps: pos.coords.accuracy,
+                };
+
+                for (const [nombre, valor] of Object.entries(campos)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = nombre;
+                    input.value = valor;
+                    form.appendChild(input);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }, function (err) {
+                status.textContent = 'No se pudo obtener tu ubicación: ' + err.message;
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+    </script>
+    @endcan
+@endsection

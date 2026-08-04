@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Policies;
+
+use App\Enums\EstadoPapeleta;
+use App\Enums\RolUsuario;
+use App\Models\Papeleta;
+use App\Models\User;
+
+class PapeletaPolicy
+{
+    public function ver(User $user, Papeleta $papeleta): bool
+    {
+        return $user->id === $papeleta->trabajador_id
+            || $user->id === $papeleta->jefe_id
+            || $user->rol === RolUsuario::RRHH
+            || $user->rol === RolUsuario::ADMINISTRADOR;
+    }
+
+    public function crear(User $user): bool
+    {
+        return $user->rol === RolUsuario::TRABAJADOR || $user->rol === RolUsuario::JEFE;
+    }
+
+    /**
+     * Aprobar/rechazar/observar: quién puede actuar depende del estado actual.
+     * SOLICITADO -> decide el jefe asignado.
+     * APROBADO_JEFE -> decide RRHH.
+     */
+    public function decidir(User $user, Papeleta $papeleta): bool
+    {
+        return match ($papeleta->estado->codigo) {
+            EstadoPapeleta::SOLICITADO->value => $user->id === $papeleta->jefe_id,
+            EstadoPapeleta::APROBADO_JEFE->value => $user->rol === RolUsuario::RRHH,
+            default => false,
+        };
+    }
+
+    /**
+     * Solo el propio trabajador marca su salida/retorno.
+     */
+    public function marcar(User $user, Papeleta $papeleta): bool
+    {
+        return $user->id === $papeleta->trabajador_id
+            && in_array($papeleta->estado->codigo, [
+                EstadoPapeleta::APROBADO_RRHH->value,
+                EstadoPapeleta::EN_CURSO->value,
+            ], true);
+    }
+
+    public function anular(User $user, Papeleta $papeleta): bool
+    {
+        return $user->rol === RolUsuario::ADMINISTRADOR
+            || ($user->id === $papeleta->trabajador_id && $papeleta->estado->codigo === EstadoPapeleta::SOLICITADO->value);
+    }
+}

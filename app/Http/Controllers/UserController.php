@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreUserRequest;
+use App\Models\Area;
+use App\Models\Cargo;
+use App\Models\Sede;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+
+class UserController extends Controller
+{
+    public function index(): View
+    {
+        return view('admin.users.index', [
+            'users' => User::with(['cargo.area', 'sede', 'jefe'])->orderBy('name')->paginate(20),
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('admin.users.create', $this->datosFormulario());
+    }
+
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $data['password'] = Hash::make($data['password']);
+
+        User::create($data);
+
+        return redirect()->route('users.index')->with('status', 'Usuario creado.');
+    }
+
+    public function edit(User $user): View
+    {
+        return view('admin.users.edit', array_merge(['user' => $user], $this->datosFormulario($user)));
+    }
+
+    public function update(StoreUserRequest $request, User $user): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $data['password'] = filled($data['password'] ?? null)
+            ? Hash::make($data['password'])
+            : $user->password;
+
+        $user->update($data);
+
+        return redirect()->route('users.index')->with('status', 'Usuario actualizado.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        // Soft-delete: nunca hard-delete, rompe el historial de papeletas.
+        $user->update(['estado' => false]);
+        $user->delete();
+
+        return back()->with('status', 'Usuario desactivado.');
+    }
+
+    private function datosFormulario(?User $excluir = null): array
+    {
+        return [
+            'areas' => Area::activas()->orderBy('nombre')->get(),
+            'cargos' => Cargo::activos()->orderBy('nombre')->get(),
+            'sedes' => Sede::where('estado', true)->orderBy('nombre')->get(),
+            'jefes' => User::where('rol', 'JEFE')
+                ->when($excluir, fn ($q) => $q->whereKeyNot($excluir->id))
+                ->orderBy('name')->get(),
+        ];
+    }
+}
