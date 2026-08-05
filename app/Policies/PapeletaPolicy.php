@@ -13,13 +13,13 @@ class PapeletaPolicy
     {
         return $user->id === $papeleta->trabajador_id
             || $user->id === $papeleta->jefe_id
-            || $user->rol === RolUsuario::RRHH
-            || $user->rol === RolUsuario::ADMINISTRADOR;
+            || $user->hasRole(RolUsuario::RRHH)
+            || $user->hasRole(RolUsuario::ADMINISTRADOR);
     }
 
     public function crear(User $user): bool
     {
-        return $user->rol === RolUsuario::TRABAJADOR || $user->rol === RolUsuario::JEFE;
+        return $user->hasRole(RolUsuario::TRABAJADOR) || $user->hasRole(RolUsuario::JEFE);
     }
 
     /**
@@ -31,7 +31,7 @@ class PapeletaPolicy
     {
         return match ($papeleta->estado->codigo) {
             EstadoPapeleta::SOLICITADO->value => $user->id === $papeleta->jefe_id,
-            EstadoPapeleta::APROBADO_JEFE->value => $user->rol === RolUsuario::RRHH,
+            EstadoPapeleta::APROBADO_JEFE->value => $user->hasRole(RolUsuario::RRHH),
             default => false,
         };
     }
@@ -50,7 +50,7 @@ class PapeletaPolicy
 
     public function anular(User $user, Papeleta $papeleta): bool
     {
-        return $user->rol === RolUsuario::ADMINISTRADOR
+        return $user->hasRole(RolUsuario::ADMINISTRADOR)
             || ($user->id === $papeleta->trabajador_id && $papeleta->estado->codigo === EstadoPapeleta::SOLICITADO->value);
     }
 }

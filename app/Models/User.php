@@ -9,14 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     protected $fillable = [
         'name', 'email', 'password', 'dni', 'telefono',
-        'cargo_id', 'sede_id', 'jefe_id', 'rol', 'estado',
+        'cargo_id', 'sede_id', 'jefe_id', 'estado',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -24,7 +25,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'rol' => RolUsuario::class,
         'estado' => 'boolean',
     ];
 
@@ -75,16 +75,16 @@ class User extends Authenticatable
 
     public function esJefe(): bool
     {
-        return $this->rol === RolUsuario::JEFE;
+        return $this->hasRole(RolUsuario::JEFE);
     }
 
     public function esRrhh(): bool
     {
-        return $this->rol === RolUsuario::RRHH;
+        return $this->hasRole(RolUsuario::RRHH);
     }
 
     public function esTrabajador(): bool
     {
-        return $this->rol === RolUsuario::TRABAJADOR;
+        return $this->hasRole(RolUsuario::TRABAJADOR);
     }
 }

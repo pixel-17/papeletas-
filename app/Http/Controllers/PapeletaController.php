@@ -25,13 +25,13 @@ class PapeletaController extends Controller
     {
         $user = $request->user();
 
-        $papeletas = match ($user->rol) {
-            RolUsuario::JEFE => Papeleta::pendientesDeJefe($user->id)
+        $papeletas = match (true) {
+            $user->hasRole(RolUsuario::JEFE) => Papeleta::pendientesDeJefe($user->id)
                 ->with(['trabajador', 'motivo', 'estado'])
                 ->latest('fecha_salida')
                 ->paginate(15),
 
-            RolUsuario::RRHH => Papeleta::pendientesDeRrhh()
+            $user->hasRole(RolUsuario::RRHH) => Papeleta::pendientesDeRrhh()
                 ->with(['trabajador', 'jefe', 'motivo', 'estado'])
                 ->latest('fecha_salida')
                 ->paginate(15),

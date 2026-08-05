@@ -15,10 +15,22 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect()->route('login');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
+require __DIR__.'/auth.php';
+
+// breeze:install genera App\Http\Controllers\ProfileController y las vistas
+// resources/views/profile/*, pero NO agrega estas rutas a auth.php — van en
+// web.php. El layout de Breeze (navigation-menu) las referencia siempre.
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::get('/dashboard', DashboardController::class)
+    ->middleware('auth')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {

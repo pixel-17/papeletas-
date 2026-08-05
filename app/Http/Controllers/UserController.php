@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RolUsuario;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\Area;
 use App\Models\Cargo;
@@ -28,9 +29,12 @@ class UserController extends Controller
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $rol = $data['rol'];
+        unset($data['rol']);
         $data['password'] = Hash::make($data['password']);
 
-        User::create($data);
+        $user = User::create($data);
+        $user->assignRole($rol);
 
         return redirect()->route('users.index')->with('status', 'Usuario creado.');
     }
@@ -43,12 +47,15 @@ class UserController extends Controller
     public function update(StoreUserRequest $request, User $user): RedirectResponse
     {
         $data = $request->validated();
+        $rol = $data['rol'];
+        unset($data['rol']);
 
         $data['password'] = filled($data['password'] ?? null)
             ? Hash::make($data['password'])
             : $user->password;
 
         $user->update($data);
+        $user->syncRoles($rol);
 
         return redirect()->route('users.index')->with('status', 'Usuario actualizado.');
     }
@@ -68,7 +75,7 @@ class UserController extends Controller
             'areas' => Area::activas()->orderBy('nombre')->get(),
             'cargos' => Cargo::activos()->orderBy('nombre')->get(),
             'sedes' => Sede::where('estado', true)->orderBy('nombre')->get(),
-            'jefes' => User::where('rol', 'JEFE')
+            'jefes' => User::role(RolUsuario::JEFE->value)
                 ->when($excluir, fn ($q) => $q->whereKeyNot($excluir->id))
                 ->orderBy('name')->get(),
         ];

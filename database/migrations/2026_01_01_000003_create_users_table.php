@@ -25,14 +25,11 @@ return new class extends Migration
                 ->constrained('users')->nullOnDelete()
                 ->comment('Jefe inmediato para flujo de aprobación');
 
-            $table->enum('rol', ['TRABAJADOR', 'JEFE', 'RRHH', 'ADMINISTRADOR'])
-                ->default('TRABAJADOR');
             $table->boolean('estado')->default(true);
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('rol', 'idx_user_rol');
             $table->index('jefe_id', 'idx_user_jefe');
         });
     }
