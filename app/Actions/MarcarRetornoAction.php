@@ -10,6 +10,7 @@ use App\Models\Marcacion;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Notifications\MarcacionRetornoNotification;
+use App\Notifications\PapeletaFinalizadaNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -57,6 +58,10 @@ class MarcarRetornoAction
 
         $papeleta->refresh();
         $papeleta->jefe?->notify(new MarcacionRetornoNotification($papeleta));
+
+        // Único correo de todo el proceso: se envía aquí, una sola vez, porque
+        // este es el punto donde la papeleta queda FINALIZADO.
+        $papeleta->trabajador->notify(new PapeletaFinalizadaNotification($papeleta));
 
         return $papeleta;
     }

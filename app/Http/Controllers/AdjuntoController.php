@@ -13,7 +13,7 @@ class AdjuntoController extends Controller
 {
     public function store(Request $request, Papeleta $papeleta): RedirectResponse
     {
-        $this->authorize('ver', $papeleta);
+        $this->authorize('adjuntar', $papeleta);
 
         $request->validate([
             'archivo' => ['required', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png'],

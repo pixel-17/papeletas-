@@ -30,6 +30,44 @@
         </dl>
     </div>
 
+    @if($papeleta->motivo->requiere_documento)
+        <div class="bg-white rounded shadow p-4 mb-4">
+            <h2 class="font-semibold text-sm mb-2">Documento sustentatorio</h2>
+            <p class="text-xs text-gray-400 mb-3">Este motivo requiere adjuntar un documento (solo se admite uno).</p>
+
+            @forelse($papeleta->adjuntos as $adjunto)
+                <div class="flex items-center justify-between text-sm border rounded p-2">
+                    <a href="{{ route('adjuntos.download', $adjunto) }}" class="text-blue-600 truncate">
+                        {{ $adjunto->nombre_original }}
+                    </a>
+                    @if($papeleta->trabajador_id === auth()->id())
+                        <form method="POST" action="{{ route('adjuntos.destroy', $adjunto) }}"
+                              onsubmit="return confirm('¿Eliminar este documento?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="text-red-500 text-xs">Quitar</button>
+                        </form>
+                    @endif
+                </div>
+            @empty
+                @can('adjuntar', $papeleta)
+                    <form method="POST" action="{{ route('adjuntos.store', $papeleta) }}"
+                          enctype="multipart/form-data" class="space-y-2">
+                        @csrf
+                        <input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png"
+                               class="w-full border rounded p-2 text-sm">
+                        <p class="text-xs text-gray-400">PDF, JPG o PNG, máx. 5MB.</p>
+                        <button class="bg-gray-800 text-white text-sm px-3 py-2 rounded w-full">
+                            Subir documento
+                        </button>
+                    </form>
+                @else
+                    <p class="text-sm text-gray-400">Aún no se adjunta ningún documento.</p>
+                @endcan
+            @endforelse
+        </div>
+    @endif
+
     @can('decidir', $papeleta)
         <div class="bg-white rounded shadow p-4 mb-4 space-y-3">
             <h2 class="font-semibold text-sm">Acciones</h2>

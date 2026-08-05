@@ -11,6 +11,10 @@ class Marcacion extends Model
 {
     use HasFactory;
 
+    // Eloquent pluraliza "Marcacion" como "marcacions" (no maneja bien el
+    // español); se fija explícitamente el nombre real de la tabla.
+    protected $table = 'marcaciones';
+
     protected $fillable = [
         'papeleta_id', 'tipo', 'latitud', 'longitud', 'precision_gps',
         'direccion', 'dentro_radio_permitido', 'ip_origen', 'user_agent',

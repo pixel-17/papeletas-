@@ -39,6 +39,12 @@ Route::middleware(['auth'])->group(function () {
 
     // ---------- Papeletas: accesible a los 3 roles, filtrado por Policy/scope ----------
     Route::get('/papeletas', [PapeletaController::class, 'index'])->name('papeletas.index');
+
+    // ---------- Exportación a CSV: solo RRHH ----------
+    Route::middleware(['role:RRHH'])->group(function () {
+        Route::get('/papeletas/exportar', [PapeletaController::class, 'exportar'])->name('papeletas.exportar');
+    });
+
     Route::get('/papeletas/crear', [PapeletaController::class, 'create'])->name('papeletas.create');
     Route::post('/papeletas', [PapeletaController::class, 'store'])->name('papeletas.store');
     Route::get('/papeletas/{papeleta}', [PapeletaController::class, 'show'])->name('papeletas.show');

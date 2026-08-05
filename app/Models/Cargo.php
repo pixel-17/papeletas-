@@ -11,6 +11,10 @@ class Cargo extends Model
 {
     use HasFactory;
 
+    // "Cargo" es palabra inglesa con plural irregular ("cargoes"); se fija
+    // explícito para asegurar que apunte a la tabla real "cargos".
+    protected $table = 'cargos';
+
     protected $fillable = ['area_id', 'nombre', 'estado'];
 
     protected $casts = [

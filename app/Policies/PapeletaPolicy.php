@@ -48,6 +48,18 @@ class PapeletaPolicy
             ], true);
     }
 
+    /**
+     * Adjuntar documento: solo el propio trabajador, solo si el motivo de
+     * la papeleta lo exige, y solo mientras no tenga ya un adjunto (se
+     * permite un único archivo por papeleta — ver AdjuntoController::store).
+     */
+    public function adjuntar(User $user, Papeleta $papeleta): bool
+    {
+        return $user->id === $papeleta->trabajador_id
+            && $papeleta->motivo->requiere_documento
+            && $papeleta->adjuntos->isEmpty();
+    }
+
     public function anular(User $user, Papeleta $papeleta): bool
     {
         return $user->hasRole(RolUsuario::ADMINISTRADOR)

@@ -11,6 +11,9 @@ class Observacion extends Model
 {
     use HasFactory;
 
+    // Mismo caso que Marcacion/Configuracion: la tabla real es "observaciones".
+    protected $table = 'observaciones';
+
     protected $fillable = ['papeleta_id', 'usuario_id', 'tipo', 'comentario', 'atendida'];
 
     protected $casts = [

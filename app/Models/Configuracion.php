@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Configuracion extends Model
 {
+    // "Configuracion" pluraliza mal en inglés (Eloquent adivinaría
+    // "configuracions"); la tabla real es "configuraciones".
+    protected $table = 'configuraciones';
+
     protected $fillable = ['clave', 'valor', 'descripcion'];
 
     public static function get(string $clave, mixed $default = null): mixed

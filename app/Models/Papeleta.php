@@ -122,8 +122,38 @@ class Papeleta extends Model
         return $query->whereHas('estado', fn ($q) => $q->where('codigo', EstadoPapeleta::APROBADO_JEFE->value));
     }
 
+    /**
+     * Todo lo que le corresponde ver a un jefe: no solo lo pendiente de su
+     * decisión, también lo ya resuelto (rechazado, observado, finalizado, etc.)
+     * de la gente que le reporta.
+     */
+    public function scopeDeSuEquipo($query, int $jefeId)
+    {
+        return $query->where('jefe_id', $jefeId);
+    }
+
     public function scopeDelTrabajador($query, int $trabajadorId)
     {
         return $query->where('trabajador_id', $trabajadorId)->latest('fecha_salida');
+    }
+
+    /**
+     * Filtros comunes de bandeja: búsqueda por texto, estado, rango de fechas y área.
+     * Cada clave es opcional; se aplica solo si viene presente y no vacía.
+     */
+    public function scopeConFiltros($query, array $filtros)
+    {
+        return $query
+            ->when($filtros['buscar'] ?? null, function ($q, $buscar) {
+                $q->where(function ($q) use ($buscar) {
+                    $q->where('codigo', 'like', "%{$buscar}%")
+                        ->orWhere('destino', 'like', "%{$buscar}%")
+                        ->orWhereHas('trabajador', fn ($q) => $q->where('name', 'like', "%{$buscar}%"));
+                });
+            })
+            ->when($filtros['estado_id'] ?? null, fn ($q, $estadoId) => $q->where('estado_id', $estadoId))
+            ->when($filtros['area_id'] ?? null, fn ($q, $areaId) => $q->where('area_id', $areaId))
+            ->when($filtros['desde'] ?? null, fn ($q, $desde) => $q->whereDate('fecha_salida', '>=', $desde))
+            ->when($filtros['hasta'] ?? null, fn ($q, $hasta) => $q->whereDate('fecha_salida', '<=', $hasta));
     }
 }
