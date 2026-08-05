@@ -13,9 +13,8 @@ use Illuminate\Support\Facades\Hash;
 class DemoDataSeeder extends Seeder
 {
     /**
-     * Ejecutar DESPUÉS de EstadoSeeder:
-     *   php artisan db:seed --class=EstadoSeeder
-     *   php artisan db:seed --class=DemoDataSeeder
+     * Requiere que RoleSeeder haya corrido antes (crea los roles en Spatie
+     * que aquí se asignan con syncRoles). DatabaseSeeder ya respeta ese orden.
      */
     public function run(): void
     {
@@ -39,18 +38,22 @@ class DemoDataSeeder extends Seeder
             'max_horas' => 6,
         ]);
 
+        // 'rol' ya no es columna de users (se migró a Spatie Permission).
+        // Se crea/actualiza el usuario SIN ese campo y el rol se asigna
+        // aparte con syncRoles(), que es idempotente (se puede correr
+        // el seeder varias veces sin duplicar el pivot).
         $admin = User::updateOrCreate(
             ['email' => 'admin@demo.test'],
             [
                 'name' => 'Ana Administradora',
                 'password' => Hash::make('password'),
                 'dni' => '10000001',
-                'rol' => 'ADMINISTRADOR',
                 'cargo_id' => $cargo->id,
                 'sede_id' => $sede->id,
                 'email_verified_at' => now(),
             ]
         );
+        $admin->syncRoles('ADMINISTRADOR');
 
         $jefe = User::updateOrCreate(
             ['email' => 'jefe@demo.test'],
@@ -58,12 +61,12 @@ class DemoDataSeeder extends Seeder
                 'name' => 'Jorge Jefe de Área',
                 'password' => Hash::make('password'),
                 'dni' => '10000002',
-                'rol' => 'JEFE',
                 'cargo_id' => $cargo->id,
                 'sede_id' => $sede->id,
                 'email_verified_at' => now(),
             ]
         );
+        $jefe->syncRoles('JEFE');
 
         $rrhh = User::updateOrCreate(
             ['email' => 'rrhh@demo.test'],
@@ -71,26 +74,26 @@ class DemoDataSeeder extends Seeder
                 'name' => 'Rosa RRHH',
                 'password' => Hash::make('password'),
                 'dni' => '10000003',
-                'rol' => 'RRHH',
                 'cargo_id' => $cargo->id,
                 'sede_id' => $sede->id,
                 'email_verified_at' => now(),
             ]
         );
+        $rrhh->syncRoles('RRHH');
 
-        User::updateOrCreate(
+        $trabajador = User::updateOrCreate(
             ['email' => 'trabajador@demo.test'],
             [
                 'name' => 'Tito Trabajador',
                 'password' => Hash::make('password'),
                 'dni' => '10000004',
-                'rol' => 'TRABAJADOR',
                 'cargo_id' => $cargo->id,
                 'sede_id' => $sede->id,
                 'jefe_id' => $jefe->id,
                 'email_verified_at' => now(),
             ]
         );
+        $trabajador->syncRoles('TRABAJADOR');
 
         $this->command->info('Usuarios demo (password para todos: "password"):');
         $this->command->table(

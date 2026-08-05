@@ -9,11 +9,10 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        // Único punto de entrada tras login; hoy todos los roles
-        // aterrizan en la misma bandeja (ya filtrada por rol dentro
-        // de PapeletaController::index). Se separa como ruta propia
-        // para poder diferenciar el destino más adelante sin tocar
-        // el flujo de autenticación de Breeze.
+        if ($request->user()?->hasRole('ADMINISTRADOR')) {
+            return redirect()->route('admin.dashboard');
+        }
+
         return redirect()->route('papeletas.index');
     }
 }

@@ -19,6 +19,11 @@ class StoreUserRequest extends FormRequest
     {
         $userId = $this->route('user')?->id;
 
+        $reglasJefeId = ['nullable', 'exists:users,id'];
+        if ($userId) {
+            $reglasJefeId[] = Rule::notIn([$userId]);
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($userId)],
@@ -27,8 +32,9 @@ class StoreUserRequest extends FormRequest
             'password' => [$userId ? 'nullable' : 'required', Password::defaults()],
             'cargo_id' => ['nullable', 'exists:cargos,id'],
             'sede_id' => ['nullable', 'exists:sedes,id'],
-            'jefe_id' => ['nullable', 'exists:users,id', 'different:id'],
+            'jefe_id' => $reglasJefeId,
             'rol' => ['required', new Enum(RolUsuario::class)],
+            'estado' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -1,16 +1,14 @@
-@extends('layouts.app')
-
-@section('titulo', 'Mis Papeletas')
-
-@section('contenido')
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-xl font-bold">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             @if(auth()->user()->esJefe()) Bandeja de Aprobación
             @elseif(auth()->user()->esRrhh()) Bandeja RRHH
             @else Mis Papeletas
             @endif
-        </h1>
+        </h2>
+    </x-slot>
 
+    <div class="flex justify-end mb-4">
         @if(auth()->user()->esTrabajador() || auth()->user()->esJefe())
             <a href="{{ route('papeletas.create') }}"
                class="bg-blue-600 text-white text-sm px-3 py-2 rounded">
@@ -46,4 +44,4 @@
     <div class="mt-4">
         {{ $papeletas->links() }}
     </div>
-@endsection
+</x-app-layout>

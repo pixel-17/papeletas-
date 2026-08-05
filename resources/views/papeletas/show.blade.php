@@ -1,8 +1,8 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $papeleta->codigo }}</h2>
+    </x-slot>
 
-@section('titulo', $papeleta->codigo)
-
-@section('contenido')
     <div class="bg-white rounded shadow p-4 mb-4">
         <div class="flex justify-between items-start mb-3">
             <h1 class="text-lg font-bold">{{ $papeleta->codigo }}</h1>
@@ -30,7 +30,6 @@
         </dl>
     </div>
 
-    {{-- Acciones del Jefe / RRHH --}}
     @can('decidir', $papeleta)
         <div class="bg-white rounded shadow p-4 mb-4 space-y-3">
             <h2 class="font-semibold text-sm">Acciones</h2>
@@ -60,7 +59,6 @@
         </div>
     @endcan
 
-    {{-- Marcación GPS del trabajador --}}
     @can('marcar', $papeleta)
         <div class="bg-white rounded shadow p-4 mb-4">
             <h2 class="font-semibold text-sm mb-3">Marcación</h2>
@@ -80,7 +78,6 @@
         </div>
     @endcan
 
-    {{-- Historial simple --}}
     <div class="bg-white rounded shadow p-4">
         <h2 class="font-semibold text-sm mb-2">Historial</h2>
         <ul class="text-xs text-gray-600 space-y-2">
@@ -135,4 +132,4 @@
         }
     </script>
     @endcan
-@endsection
+</x-app-layout>

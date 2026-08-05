@@ -1,9 +1,7 @@
-@extends('layouts.app')
-
-@section('titulo', 'Nueva Papeleta')
-
-@section('contenido')
-    <h1 class="text-xl font-bold mb-4">Nueva Papeleta</h1>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Nueva Papeleta</h2>
+    </x-slot>
 
     <form method="POST" action="{{ route('papeletas.store') }}" class="bg-white rounded shadow p-4 space-y-4">
         @csrf
@@ -56,4 +54,4 @@
             <a href="{{ route('papeletas.index') }}" class="text-gray-600 px-4 py-2">Cancelar</a>
         </div>
     </form>
-@endsection
+</x-app-layout>

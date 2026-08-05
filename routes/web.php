@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdjuntoController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AprobacionController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CargoController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PapeletaController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SedeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\DashboardController;
@@ -64,11 +66,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push.store');
     Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
 
-    // ---------- Catálogos: solo ADMINISTRADOR ----------
+    // ---------- Panel y catálogos: solo ADMINISTRADOR ----------
     Route::middleware(['role:ADMINISTRADOR'])->group(function () {
+        Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');
+
         Route::resource('areas', AreaController::class)->except(['show']);
         Route::resource('cargos', CargoController::class)->except(['show']);
         Route::resource('sedes', SedeController::class)->except(['show']);
         Route::resource('motivos', MotivoController::class)->except(['show']);
+        Route::resource('users', UserController::class)->except(['show']);
     });
 });

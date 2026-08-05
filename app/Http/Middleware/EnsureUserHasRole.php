@@ -10,9 +10,13 @@ class EnsureUserHasRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $rol = $request->user()?->rol?->value;
-
-        abort_unless($rol && in_array($rol, $roles, true), 403, 'No tienes permiso para acceder a esta sección.');
+        // La columna users.rol fue eliminada al migrar a Spatie Permission;
+        // la autorización por rol ahora vive en la tabla model_has_roles.
+        abort_unless(
+            $request->user()?->hasAnyRole($roles) ?? false,
+            403,
+            'No tienes permiso para acceder a esta sección.'
+        );
 
         return $next($request);
     }
