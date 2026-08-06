@@ -47,13 +47,16 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Fecha</label>
-                <input type="date" name="fecha_salida" required value="{{ old('fecha_salida') }}"
+                <input type="date" name="fecha_salida" id="fecha_salida" required
+                       min="{{ now()->toDateString() }}" value="{{ old('fecha_salida') }}"
                        class="w-full border rounded p-2">
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1">Hora salida</label>
-                <input type="time" name="hora_salida_programada" required value="{{ old('hora_salida_programada') }}"
+                <input type="time" name="hora_salida_programada" id="hora_salida_programada" required
+                       value="{{ old('hora_salida_programada') }}"
                        class="w-full border rounded p-2">
+                <p id="hora-hint" class="text-[11px] text-gray-400 mt-1"></p>
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1">Hora retorno</label>
@@ -61,6 +64,35 @@
                        class="w-full border rounded p-2">
             </div>
         </div>
+
+        <script>
+            // Solo UX: si eligen hoy, no dejamos elegir una hora ya pasada
+            // en el picker. La validación real (que no se puede saltar
+            // editando el HTML) va en StorePapeletaRequest::withValidator.
+            (function () {
+                const fechaInput = document.getElementById('fecha_salida');
+                const horaInput = document.getElementById('hora_salida_programada');
+                const hint = document.getElementById('hora-hint');
+
+                function actualizarMinHora() {
+                    const hoy = new Date().toISOString().slice(0, 10);
+
+                    if (fechaInput.value === hoy) {
+                        const ahora = new Date();
+                        const hh = String(ahora.getHours()).padStart(2, '0');
+                        const mm = String(ahora.getMinutes()).padStart(2, '0');
+                        horaInput.min = `${hh}:${mm}`;
+                        hint.textContent = 'Como la fecha es hoy, la hora no puede ser menor a la actual.';
+                    } else {
+                        horaInput.removeAttribute('min');
+                        hint.textContent = '';
+                    }
+                }
+
+                fechaInput.addEventListener('change', actualizarMinHora);
+                actualizarMinHora();
+            })();
+        </script>
 
         <div class="flex gap-2 pt-2">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full sm:w-auto">

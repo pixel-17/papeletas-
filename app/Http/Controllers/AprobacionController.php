@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\AprobarPapeletaAction;
+use App\Actions\ConfirmarRetornoAction;
 use App\Actions\ObservarPapeletaAction;
 use App\Actions\RechazarPapeletaAction;
 use App\Actions\ResponderObservacionAction;
@@ -54,5 +55,16 @@ class AprobacionController extends Controller
         $action->execute($papeleta, $request->user(), $request->input('respuesta'));
 
         return back()->with('status', 'Respuesta enviada. La papeleta vuelve a revisión.');
+    }
+
+    public function confirmarRetorno(Request $request, Papeleta $papeleta, ConfirmarRetornoAction $action): RedirectResponse
+    {
+        $this->authorize('confirmarRetorno', $papeleta);
+
+        $request->validate(['comentario' => ['nullable', 'string', 'max:1000']]);
+
+        $action->execute($papeleta, $request->user(), $request->input('comentario'));
+
+        return back()->with('status', "Retorno confirmado. Papeleta {$papeleta->codigo} finalizada.");
     }
 }

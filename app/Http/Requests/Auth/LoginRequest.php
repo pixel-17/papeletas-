@@ -42,9 +42,14 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $credenciales = $this->only('email', 'password') + ['estado' => true];
+
+        if (! Auth::attempt($credenciales, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // No se distingue "credenciales inválidas" de "usuario inactivo":
+            // dar el mismo mensaje evita filtrar si el email existe pero
+            // está desactivado.
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);

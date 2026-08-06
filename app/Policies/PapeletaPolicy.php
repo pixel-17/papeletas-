@@ -85,6 +85,17 @@ class PapeletaPolicy
             && $papeleta->estado->codigo === EstadoPapeleta::OBSERVADO->value;
     }
 
+    /**
+     * Confirmar retorno: solo el jefe asignado, y solo mientras la papeleta
+     * está RETORNO_MARCADO (el trabajador ya marcó GPS, falta el visto
+     * bueno del jefe para que quede FINALIZADO).
+     */
+    public function confirmarRetorno(User $user, Papeleta $papeleta): bool
+    {
+        return $user->id === $papeleta->jefe_id
+            && $papeleta->estado->codigo === EstadoPapeleta::RETORNO_MARCADO->value;
+    }
+
     public function anular(User $user, Papeleta $papeleta): bool
     {
         return $user->hasRole(RolUsuario::ADMINISTRADOR)

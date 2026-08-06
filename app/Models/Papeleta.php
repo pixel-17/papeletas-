@@ -114,7 +114,10 @@ class Papeleta extends Model
     public function scopePendientesDeJefe($query, int $jefeId)
     {
         return $query->where('jefe_id', $jefeId)
-            ->whereHas('estado', fn ($q) => $q->where('codigo', EstadoPapeleta::SOLICITADO->value));
+            ->whereHas('estado', fn ($q) => $q->whereIn('codigo', [
+                EstadoPapeleta::SOLICITADO->value,
+                EstadoPapeleta::RETORNO_MARCADO->value,
+            ]));
     }
 
     public function scopePendientesDeRrhh($query)

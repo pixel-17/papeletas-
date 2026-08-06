@@ -10,7 +10,6 @@ use App\Models\Marcacion;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Notifications\MarcacionRetornoNotification;
-use App\Notifications\PapeletaFinalizadaNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -49,19 +48,19 @@ class MarcarRetornoAction
             ]);
 
             $estadoAnterior = $papeleta->estado->codigo;
-            $papeleta->update(['estado_id' => Estado::porCodigo(EstadoPapeleta::FINALIZADO)->id]);
+            // Ya no finaliza aquí: queda a la espera de que el jefe confirme
+            // el retorno. Ver ConfirmarRetornoAction.
+            $papeleta->update(['estado_id' => Estado::porCodigo(EstadoPapeleta::RETORNO_MARCADO)->id]);
 
             HistorialPapeleta::registrar(
-                $papeleta, $trabajador, 'MARCO_RETORNO', $estadoAnterior, EstadoPapeleta::FINALIZADO->value
+                $papeleta, $trabajador, 'MARCO_RETORNO', $estadoAnterior, EstadoPapeleta::RETORNO_MARCADO->value
             );
         });
 
         $papeleta->refresh();
+        // Este correo ya no se manda aquí: se manda una sola vez, al confirmar
+        // el jefe, en ConfirmarRetornoAction.
         $papeleta->jefe?->notify(new MarcacionRetornoNotification($papeleta));
-
-        // Único correo de todo el proceso: se envía aquí, una sola vez, porque
-        // este es el punto donde la papeleta queda FINALIZADO.
-        $papeleta->trabajador->notify(new PapeletaFinalizadaNotification($papeleta));
 
         return $papeleta;
     }

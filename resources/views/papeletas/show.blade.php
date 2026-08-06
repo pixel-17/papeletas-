@@ -31,6 +31,67 @@
     </div>
 
     @php
+        $esperaConfig = match($papeleta->estado->codigo) {
+            \App\Enums\EstadoPapeleta::SOLICITADO->value => [
+                'mensaje' => 'Esperando aprobación del jefe',
+                'desde' => $papeleta->created_at,
+            ],
+            \App\Enums\EstadoPapeleta::APROBADO_JEFE->value => [
+                'mensaje' => 'Esperando aprobación de RRHH',
+                'desde' => optional(
+                    $papeleta->flujoAprobaciones
+                        ->where('rol', 'JEFE')
+                        ->where('accion', \App\Enums\AccionFlujo::APROBADO->value)
+                        ->last()
+                )->created_at ?? $papeleta->created_at,
+            ],
+            \App\Enums\EstadoPapeleta::RETORNO_MARCADO->value => [
+                'mensaje' => 'Esperando que tu jefe confirme el retorno',
+                'desde' => optional(
+                    $papeleta->marcaciones->firstWhere('tipo', \App\Enums\TipoMarcacion::RETORNO->value)
+                )->created_at ?? $papeleta->updated_at,
+            ],
+            default => null,
+        };
+    @endphp
+
+    @if($esperaConfig)
+        <div class="bg-white rounded shadow p-4 mb-4 flex items-center gap-3">
+            <span class="inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin shrink-0"></span>
+            <div>
+                <p class="text-sm font-medium text-gray-700">{{ $esperaConfig['mensaje'] }}</p>
+                <p class="text-xs text-gray-400" id="tiempo-espera"
+                   data-desde="{{ $esperaConfig['desde']->toIso8601String() }}">
+                    calculando…
+                </p>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const el = document.getElementById('tiempo-espera');
+                if (!el) return;
+
+                const desde = new Date(el.dataset.desde);
+
+                function actualizar() {
+                    const diffMs = Math.max(0, Date.now() - desde.getTime());
+                    const minutosTotales = Math.floor(diffMs / 60000);
+                    const horas = Math.floor(minutosTotales / 60);
+                    const minutos = minutosTotales % 60;
+
+                    el.textContent = horas > 0
+                        ? `Tienes ${horas} h ${minutos} min esperando`
+                        : `Tienes ${minutos} min esperando`;
+                }
+
+                actualizar();
+                setInterval(actualizar, 30000);
+            })();
+        </script>
+    @endif
+
+    @php
         $pideSustento = $papeleta->observaciones
             ->where('atendida', false)
             ->contains(fn ($o) => $o->tipo === \App\Enums\TipoObservacion::JUSTIFICACION);
@@ -151,6 +212,22 @@
                 <textarea name="comentario" required placeholder="Detalle de la observación"
                           class="w-full border rounded p-2 text-sm" rows="2"></textarea>
                 <button class="bg-orange-500 text-white text-sm px-3 py-2 rounded w-full">Observar</button>
+            </form>
+        </div>
+    @endcan
+
+    @can('confirmarRetorno', $papeleta)
+        <div class="bg-white rounded shadow p-4 mb-4 space-y-3">
+            <h2 class="font-semibold text-sm">Confirmar retorno</h2>
+            <p class="text-xs text-gray-500">
+                {{ $papeleta->trabajador->name }} marcó su retorno (GPS). Confirma para cerrar la papeleta;
+                el trabajador recibirá un correo con la constancia completa.
+            </p>
+            <form method="POST" action="{{ route('papeletas.confirmar-retorno', $papeleta) }}" class="space-y-2">
+                @csrf
+                <textarea name="comentario" placeholder="Comentario (opcional)"
+                          class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+                <button class="bg-cyan-600 text-white text-sm px-3 py-2 rounded w-full">Confirmar retorno</button>
             </form>
         </div>
     @endcan

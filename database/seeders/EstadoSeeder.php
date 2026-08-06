@@ -14,10 +14,11 @@ class EstadoSeeder extends Seeder
             ['codigo' => 'APROBADO_JEFE', 'nombre' => 'Aprobado por Jefe', 'color' => 'blue', 'orden' => 2],
             ['codigo' => 'APROBADO_RRHH', 'nombre' => 'Aprobado por RRHH', 'color' => 'indigo', 'orden' => 3],
             ['codigo' => 'EN_CURSO', 'nombre' => 'En Curso', 'color' => 'yellow', 'orden' => 4],
-            ['codigo' => 'FINALIZADO', 'nombre' => 'Finalizado', 'color' => 'green', 'orden' => 5],
-            ['codigo' => 'RECHAZADO', 'nombre' => 'Rechazado', 'color' => 'red', 'orden' => 6],
-            ['codigo' => 'OBSERVADO', 'nombre' => 'Observado', 'color' => 'orange', 'orden' => 7],
-            ['codigo' => 'VENCIDA', 'nombre' => 'Vencida', 'color' => 'red', 'orden' => 8],
+            ['codigo' => 'RETORNO_MARCADO', 'nombre' => 'Retorno Marcado', 'color' => 'cyan', 'orden' => 5],
+            ['codigo' => 'FINALIZADO', 'nombre' => 'Finalizado', 'color' => 'green', 'orden' => 6],
+            ['codigo' => 'RECHAZADO', 'nombre' => 'Rechazado', 'color' => 'red', 'orden' => 7],
+            ['codigo' => 'OBSERVADO', 'nombre' => 'Observado', 'color' => 'orange', 'orden' => 8],
+            ['codigo' => 'VENCIDA', 'nombre' => 'Vencida', 'color' => 'red', 'orden' => 9],
         ];
 
         foreach ($estados as $estado) {

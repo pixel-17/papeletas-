@@ -21,6 +21,6 @@ class MarcacionController extends Controller
     {
         $action->execute($papeleta, $request->user(), $request->validated());
 
-        return back()->with('status', 'Retorno marcado. Papeleta finalizada.');
+        return back()->with('status', 'Retorno marcado. Queda a la espera de que tu jefe confirme.');
     }
 }

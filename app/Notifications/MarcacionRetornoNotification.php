@@ -6,7 +6,7 @@ class MarcacionRetornoNotification extends BasePapeletaNotification
 {
     public function tipo(): string
     {
-        return 'CIERRE_FORMAL';
+        return 'CONFIRMACION_PENDIENTE';
     }
 
     public function titulo(): string
@@ -16,6 +16,6 @@ class MarcacionRetornoNotification extends BasePapeletaNotification
 
     public function mensaje(): string
     {
-        return "Papeleta {$this->papeleta->codigo}: finalizada correctamente.";
+        return "Papeleta {$this->papeleta->codigo}: pendiente de tu confirmación de retorno.";
     }
 }
