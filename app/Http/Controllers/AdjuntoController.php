@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ResponderObservacionAction;
+use App\Enums\TipoObservacion;
 use App\Models\Adjunto;
 use App\Models\Papeleta;
 use Illuminate\Http\RedirectResponse;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class AdjuntoController extends Controller
 {
-    public function store(Request $request, Papeleta $papeleta): RedirectResponse
+    public function store(Request $request, Papeleta $papeleta, ResponderObservacionAction $responder): RedirectResponse
     {
         $this->authorize('adjuntar', $papeleta);
 
@@ -30,6 +32,21 @@ class AdjuntoController extends Controller
             'peso' => $archivo->getSize(),
         ]);
 
+        // Si lo que motivó la subida fue una observación pidiendo sustento,
+        // el archivo ES la respuesta: no se le pide además escribir texto.
+        // Un solo botón, una sola acción.
+        $observacionPendiente = $papeleta->observaciones()
+            ->where('atendida', false)
+            ->where('tipo', TipoObservacion::JUSTIFICACION->value)
+            ->latest()
+            ->first();
+
+        if ($observacionPendiente) {
+            $responder->execute($papeleta, $request->user(), "Documento adjuntado: {$archivo->getClientOriginalName()}");
+
+            return back()->with('status', 'Documento adjuntado. La papeleta vuelve a revisión.');
+        }
+
         return back()->with('status', 'Documento adjuntado.');
     }
 
@@ -37,7 +54,10 @@ class AdjuntoController extends Controller
     {
         $this->authorize('ver', $adjunto->papeleta);
 
-        return Storage::disk('local')->download($adjunto->archivo, $adjunto->nombre_original);
+        // ->response() (no ->download()) sirve el archivo "inline": el
+        // navegador lo abre/previsualiza directo (importante para PDFs),
+        // en vez de forzar la descarga.
+        return Storage::disk('local')->response($adjunto->archivo, $adjunto->nombre_original);
     }
 
     public function destroy(Adjunto $adjunto): RedirectResponse

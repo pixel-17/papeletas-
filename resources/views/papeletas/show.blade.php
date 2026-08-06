@@ -30,15 +30,27 @@
         </dl>
     </div>
 
-    @if($papeleta->motivo->requiere_documento)
+    @php
+        $pideSustento = $papeleta->observaciones
+            ->where('atendida', false)
+            ->contains(fn ($o) => $o->tipo === \App\Enums\TipoObservacion::JUSTIFICACION);
+    @endphp
+
+    @if($papeleta->adjuntos->isNotEmpty() || $papeleta->motivo->requiere_documento || $pideSustento)
         <div class="bg-white rounded shadow p-4 mb-4">
             <h2 class="font-semibold text-sm mb-2">Documento sustentatorio</h2>
-            <p class="text-xs text-gray-400 mb-3">Este motivo requiere adjuntar un documento (solo se admite uno).</p>
+            <p class="text-xs text-gray-400 mb-3">
+                @if($pideSustento)
+                    Te observaron pidiendo sustento — adjunta un documento para responder.
+                @elseif($papeleta->adjuntos->isEmpty())
+                    Este motivo requiere adjuntar un documento (solo se admite uno).
+                @endif
+            </p>
 
-            @forelse($papeleta->adjuntos as $adjunto)
-                <div class="flex items-center justify-between text-sm border rounded p-2">
-                    <a href="{{ route('adjuntos.download', $adjunto) }}" class="text-blue-600 truncate">
-                        {{ $adjunto->nombre_original }}
+            @foreach($papeleta->adjuntos as $adjunto)
+                <div class="flex items-center justify-between text-sm border rounded p-2 mb-2">
+                    <a href="{{ route('adjuntos.download', $adjunto) }}" target="_blank" class="text-blue-600 truncate">
+                        📄 {{ $adjunto->nombre_original }}
                     </a>
                     @if($papeleta->trabajador_id === auth()->id())
                         <form method="POST" action="{{ route('adjuntos.destroy', $adjunto) }}"
@@ -49,22 +61,68 @@
                         </form>
                     @endif
                 </div>
-            @empty
-                @can('adjuntar', $papeleta)
-                    <form method="POST" action="{{ route('adjuntos.store', $papeleta) }}"
-                          enctype="multipart/form-data" class="space-y-2">
-                        @csrf
-                        <input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png"
-                               class="w-full border rounded p-2 text-sm">
-                        <p class="text-xs text-gray-400">PDF, JPG o PNG, máx. 5MB.</p>
-                        <button class="bg-gray-800 text-white text-sm px-3 py-2 rounded w-full">
-                            Subir documento
-                        </button>
-                    </form>
-                @else
+            @endforeach
+
+            @can('adjuntar', $papeleta)
+                <form method="POST" action="{{ route('adjuntos.store', $papeleta) }}"
+                      enctype="multipart/form-data" class="space-y-2">
+                    @csrf
+                    <input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png"
+                           class="w-full border rounded p-2 text-sm">
+                    <p class="text-xs text-gray-400">PDF, JPG o PNG, máx. 5MB.</p>
+                    <button class="bg-gray-800 text-white text-sm px-3 py-2 rounded w-full">
+                        {{ $pideSustento ? 'Subir y responder observación' : 'Subir documento' }}
+                    </button>
+                </form>
+            @else
+                @if($papeleta->adjuntos->isEmpty())
                     <p class="text-sm text-gray-400">Aún no se adjunta ningún documento.</p>
-                @endcan
-            @endforelse
+                @endif
+            @endcan
+        </div>
+    @endif
+
+    @if($papeleta->observaciones->isNotEmpty())
+        <div class="bg-white rounded shadow p-4 mb-4">
+            <h2 class="font-semibold text-sm mb-3">Observaciones</h2>
+            <div class="space-y-3">
+                @foreach($papeleta->observaciones as $observacion)
+                    <div class="border rounded p-3 text-sm {{ $observacion->atendida ? 'bg-gray-50' : 'bg-orange-50 border-orange-200' }}">
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="text-xs font-medium text-gray-500">
+                                {{ $observacion->tipo->label() }}
+                            </span>
+                            <span class="text-[11px] px-2 py-0.5 rounded whitespace-nowrap {{ $observacion->atendida ? 'bg-gray-200 text-gray-600' : 'bg-orange-200 text-orange-800' }}">
+                                {{ $observacion->atendida ? 'Respondida' : 'Pendiente de respuesta' }}
+                            </span>
+                        </div>
+                        <p class="mt-1">{{ $observacion->comentario }}</p>
+                        <p class="text-[11px] text-gray-400 mt-1">
+                            {{ $observacion->usuario?->name ?? 'Sistema' }} — {{ $observacion->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+                @endforeach
+            </div>
+
+            @can('responderObservacion', $papeleta)
+                @if($pideSustento)
+                    <p class="text-xs text-gray-400 mt-3">
+                        Sube el documento de sustento arriba — al subirlo, esta observación queda respondida automáticamente.
+                    </p>
+                @else
+                    <form method="POST" action="{{ route('papeletas.responder-observacion', $papeleta) }}" class="mt-3 space-y-2">
+                        @csrf
+                        <textarea name="respuesta" required placeholder="Escribe tu respuesta a la observación..."
+                                  class="w-full border rounded p-2 text-sm" rows="3"></textarea>
+                        <button class="bg-blue-600 text-white text-sm px-3 py-2 rounded w-full">
+                            Enviar respuesta
+                        </button>
+                        <p class="text-xs text-gray-400">
+                            Al responder, tu papeleta vuelve a revisión de quien la observó.
+                        </p>
+                    </form>
+                @endif
+            @endcan
         </div>
     @endif
 
@@ -96,6 +154,49 @@
             </form>
         </div>
     @endcan
+
+    @if($papeleta->marcaciones->isNotEmpty())
+        <div class="bg-white rounded shadow p-4 mb-4">
+            <h2 class="font-semibold text-sm mb-3">Marcación GPS</h2>
+            <div class="space-y-2">
+                @foreach($papeleta->marcaciones as $marcacion)
+                    <div class="border rounded p-2 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">
+                                {{ $marcacion->tipo === \App\Enums\TipoMarcacion::SALIDA ? 'Salida' : 'Retorno' }}
+                            </span>
+
+                            @if(is_null($marcacion->dentro_radio_permitido))
+                                <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500">
+                                    Sede sin coordenadas configuradas
+                                </span>
+                            @elseif($marcacion->dentro_radio_permitido)
+                                <span class="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">
+                                    ✓ Dentro del radio
+                                </span>
+                            @else
+                                <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
+                                    ⚠ Fuera del radio permitido
+                                </span>
+                            @endif
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ $marcacion->created_at->format('d/m/Y H:i') }}
+                            @if($marcacion->direccion) — {{ $marcacion->direccion }} @endif
+                        </p>
+
+                        @if($marcacion->precision_gps)
+                            <p class="text-[11px] mt-0.5 {{ $marcacion->precision_gps > 100 ? 'text-amber-600' : 'text-gray-400' }}">
+                                Precisión del GPS: ±{{ round($marcacion->precision_gps) }} m
+                                @if($marcacion->precision_gps > 100) (poco confiable) @endif
+                            </p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     @can('marcar', $papeleta)
         <div class="bg-white rounded shadow p-4 mb-4">
@@ -130,7 +231,32 @@
     </div>
 
     @can('marcar', $papeleta)
+    @php
+        // Se arma aparte (fuera del @json) porque pasarle un ternario con un
+        // array literal directo a @json rompía el parser de Blade.
+        $sedeParaJs = $papeleta->sede ? [
+            'lat' => (float) $papeleta->sede->latitud,
+            'lng' => (float) $papeleta->sede->longitud,
+            'radio' => $papeleta->sede->radio_permitido,
+            'nombre' => $papeleta->sede->nombre,
+        ] : null;
+    @endphp
     <script>
+        const sede = @json($sedeParaJs);
+
+        // Misma fórmula haversine que usa el backend (Sede::distanciaHaciaMetros),
+        // para poder avisarle al trabajador ANTES de enviar, sin depender de
+        // un viaje al servidor.
+        function distanciaMetros(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = (deg) => deg * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) ** 2
+                + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
         function marcar(tipo) {
             const status = document.getElementById('gps-status');
             status.textContent = 'Obteniendo ubicación...';
@@ -141,32 +267,58 @@
             }
 
             navigator.geolocation.getCurrentPosition(function (pos) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = tipo === 'salida'
-                    ? '{{ route('papeletas.marcar-salida', $papeleta) }}'
-                    : '{{ route('papeletas.marcar-retorno', $papeleta) }}';
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
 
-                const campos = {
-                    _token: '{{ csrf_token() }}',
-                    latitud: pos.coords.latitude,
-                    longitud: pos.coords.longitude,
-                    precision_gps: pos.coords.accuracy,
-                };
-
-                for (const [nombre, valor] of Object.entries(campos)) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = nombre;
-                    input.value = valor;
-                    form.appendChild(input);
+                // Aviso previo (no bloqueante): si hay coordenadas de sede y
+                // el trabajador está claramente fuera del radio, se le
+                // pregunta si quiere continuar igual. La marcación siempre
+                // queda registrada con el resultado real, lo decida o no.
+                if (sede && sede.lat && sede.lng) {
+                    const distancia = Math.round(distanciaMetros(lat, lng, sede.lat, sede.lng));
+                    if (distancia > sede.radio) {
+                        const continuar = confirm(
+                            `Estás a ${distancia} m de "${sede.nombre}" ` +
+                            `(radio permitido: ${sede.radio} m). ` +
+                            `¿Marcar de todas formas?`
+                        );
+                        if (!continuar) {
+                            status.textContent = 'Marcación cancelada.';
+                            return;
+                        }
+                    }
                 }
 
-                document.body.appendChild(form);
-                form.submit();
+                enviarMarcacion(tipo, lat, lng, pos.coords.accuracy);
             }, function (err) {
                 status.textContent = 'No se pudo obtener tu ubicación: ' + err.message;
             }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        function enviarMarcacion(tipo, lat, lng, precision) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = tipo === 'salida'
+                ? '{{ route('papeletas.marcar-salida', $papeleta) }}'
+                : '{{ route('papeletas.marcar-retorno', $papeleta) }}';
+
+            const campos = {
+                _token: '{{ csrf_token() }}',
+                latitud: lat,
+                longitud: lng,
+                precision_gps: precision,
+            };
+
+            for (const [nombre, valor] of Object.entries(campos)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = nombre;
+                input.value = valor;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
     @endcan

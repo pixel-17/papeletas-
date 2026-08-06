@@ -7,8 +7,24 @@
 
     <title>{{ config('app.name', 'Sistema de Papeletas') }}</title>
 
+    {{-- PWA: instalable en el celular/escritorio --}}
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Papeletas">
+
     <script>
         window.VAPID_PUBLIC_KEY = "{{ config('webpush.vapid.public_key') }}";
+
+        // Se registra siempre (no solo al activar notificaciones): es lo que
+        // hace que el navegador ofrezca "Instalar app". El sw.js sigue
+        // manejando el push por separado una vez que el usuario lo active.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+        }
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])

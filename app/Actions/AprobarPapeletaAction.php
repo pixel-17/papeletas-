@@ -52,7 +52,10 @@ class AprobarPapeletaAction
 
         if ($esJefeDecidiendo) {
             $papeleta->trabajador->notify(new PapeletaAprobadaJefeNotification($papeleta));
-            Notification::send(User::where('rol', RolUsuario::RRHH)->get(), new PapeletaAprobadaJefeNotification($papeleta));
+            // El proyecto usa Spatie Permission (roles vía tabla pivote),
+            // no una columna "rol" en users — ->where('rol', ...) no existe
+            // y tronaba. Se usa el scope role() que trae Spatie.
+            Notification::send(User::role(RolUsuario::RRHH->value)->get(), new PapeletaAprobadaJefeNotification($papeleta));
         } else {
             $papeleta->trabajador->notify(new PapeletaAprobadaRrhhNotification($papeleta));
             $papeleta->jefe?->notify(new PapeletaAprobadaRrhhNotification($papeleta));

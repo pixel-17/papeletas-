@@ -27,7 +27,8 @@ class ObservarPapeletaAction
         Gate::forUser($usuario)->authorize('decidir', $papeleta);
 
         $estadoAnteriorCodigo = $papeleta->estado->codigo;
-        $rolActuando = $usuario->rol === RolUsuario::JEFE ? RolUsuario::JEFE : RolUsuario::RRHH;
+        // Mismo caso que en RechazarPapeletaAction: $usuario->rol no existe.
+        $rolActuando = $usuario->hasRole(RolUsuario::JEFE) ? RolUsuario::JEFE : RolUsuario::RRHH;
 
         DB::transaction(function () use ($papeleta, $usuario, $comentario, $tipo, $rolActuando, $estadoAnteriorCodigo) {
             $papeleta->update(['estado_id' => Estado::porCodigo(EstadoPapeleta::OBSERVADO)->id]);

@@ -21,7 +21,10 @@ class RechazarPapeletaAction
         Gate::forUser($usuario)->authorize('decidir', $papeleta);
 
         $estadoAnteriorCodigo = $papeleta->estado->codigo;
-        $rolActuando = $usuario->rol === RolUsuario::JEFE ? RolUsuario::JEFE : RolUsuario::RRHH;
+        // $usuario->rol no existe (los roles van por Spatie, vía hasRole),
+        // siempre daba null -> quedaba mal registrado como "RRHH" incluso
+        // cuando rechazaba el Jefe.
+        $rolActuando = $usuario->hasRole(RolUsuario::JEFE) ? RolUsuario::JEFE : RolUsuario::RRHH;
 
         DB::transaction(function () use ($papeleta, $usuario, $comentario, $rolActuando, $estadoAnteriorCodigo) {
             $papeleta->update(['estado_id' => Estado::porCodigo(EstadoPapeleta::RECHAZADO)->id]);

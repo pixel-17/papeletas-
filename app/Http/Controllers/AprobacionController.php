@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\AprobarPapeletaAction;
 use App\Actions\ObservarPapeletaAction;
 use App\Actions\RechazarPapeletaAction;
+use App\Actions\ResponderObservacionAction;
 use App\Enums\TipoObservacion;
 use App\Http\Requests\ObservarPapeletaRequest;
 use App\Http\Requests\RechazarPapeletaRequest;
@@ -42,5 +43,16 @@ class AprobacionController extends Controller
         );
 
         return back()->with('status', "Papeleta {$papeleta->codigo} observada.");
+    }
+
+    public function responderObservacion(Request $request, Papeleta $papeleta, ResponderObservacionAction $action): RedirectResponse
+    {
+        $this->authorize('responderObservacion', $papeleta);
+
+        $request->validate(['respuesta' => ['required', 'string', 'max:1000']]);
+
+        $action->execute($papeleta, $request->user(), $request->input('respuesta'));
+
+        return back()->with('status', 'Respuesta enviada. La papeleta vuelve a revisión.');
     }
 }

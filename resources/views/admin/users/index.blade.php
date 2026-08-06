@@ -6,6 +6,51 @@
         </div>
     </x-slot>
 
+    <form method="GET" action="{{ route('users.index') }}"
+          class="bg-white rounded shadow p-4 mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+        <input type="text" name="buscar" value="{{ $filtros['buscar'] ?? '' }}"
+               placeholder="Nombre o correo"
+               class="border-gray-300 rounded text-sm col-span-1 md:col-span-2">
+
+        <select name="rol" class="border-gray-300 rounded text-sm">
+            <option value="">Todos los roles</option>
+            @foreach ($roles as $rol)
+                <option value="{{ $rol->value }}" @selected(($filtros['rol'] ?? null) === $rol->value)>
+                    {{ $rol->label() }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="area_id" class="border-gray-300 rounded text-sm">
+            <option value="">Todas las áreas</option>
+            @foreach ($areas as $area)
+                <option value="{{ $area->id }}" @selected(($filtros['area_id'] ?? null) == $area->id)>
+                    {{ $area->nombre }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="sede_id" class="border-gray-300 rounded text-sm">
+            <option value="">Todas las sedes</option>
+            @foreach ($sedes as $sede)
+                <option value="{{ $sede->id }}" @selected(($filtros['sede_id'] ?? null) == $sede->id)>
+                    {{ $sede->nombre }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="estado" class="border-gray-300 rounded text-sm">
+            <option value="">Activos e inactivos</option>
+            <option value="activo" @selected(($filtros['estado'] ?? null) === 'activo')>Solo activos</option>
+            <option value="inactivo" @selected(($filtros['estado'] ?? null) === 'inactivo')>Solo inactivos</option>
+        </select>
+
+        <div class="col-span-1 md:col-span-5 flex justify-end gap-2">
+            <a href="{{ route('users.index') }}" class="text-sm text-gray-500 px-3 py-2">Limpiar</a>
+            <button type="submit" class="bg-gray-800 text-white text-sm px-4 py-2 rounded">Filtrar</button>
+        </div>
+    </form>
+
     <div class="bg-white rounded shadow overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
@@ -45,7 +90,13 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="p-6 text-center text-gray-500">No hay usuarios registrados.</td></tr>
+                    <tr><td colspan="6" class="p-6 text-center text-gray-500">
+                        @if(array_filter($filtros))
+                            No hay usuarios que coincidan con el filtro.
+                        @else
+                            No hay usuarios registrados.
+                        @endif
+                    </td></tr>
                 @endforelse
             </tbody>
         </table>

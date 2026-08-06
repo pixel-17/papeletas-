@@ -10,6 +10,14 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
 });
 
+// Passthrough simple: no cachea nada (esto es un sistema de aprobaciones,
+// mostrar datos viejos por error sería peor que no tener caché). Existe
+// sobre todo porque algunos navegadores solo ofrecen "Instalar app" si el
+// service worker tiene un listener de fetch activo.
+self.addEventListener('fetch', (event) => {
+    event.respondWith(fetch(event.request));
+});
+
 // Llega cuando el backend envía el push vía minishlink/web-push (WebPushChannel.php)
 self.addEventListener('push', (event) => {
     if (!event.data) return;

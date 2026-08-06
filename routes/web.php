@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/papeletas/{papeleta}/aprobar', [AprobacionController::class, 'aprobar'])->name('papeletas.aprobar');
     Route::post('/papeletas/{papeleta}/rechazar', [AprobacionController::class, 'rechazar'])->name('papeletas.rechazar');
     Route::post('/papeletas/{papeleta}/observar', [AprobacionController::class, 'observar'])->name('papeletas.observar');
+    Route::post('/papeletas/{papeleta}/responder-observacion', [AprobacionController::class, 'responderObservacion'])->name('papeletas.responder-observacion');
 
     // ---------- Marcación GPS: solo el propio trabajador ----------
     Route::post('/papeletas/{papeleta}/marcar-salida', [MarcacionController::class, 'salida'])->name('papeletas.marcar-salida');
