@@ -31,6 +31,8 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
+    <x-notification-toast />
+
     @include('layouts.navigation')
 
     @if (isset($header))

@@ -1,17 +1,25 @@
 /**
- * Campana de notificaciones.
+ * Store global de notificaciones (Alpine.store).
  *
- * Comportamiento pedido:
+ * Antes: `Alpine.data('notificacionesCampana', ...)` + `x-data="notificacionesCampana()"`
+ * creaba una instancia NUEVA (con su propio polling) por cada `<x-campana-notificaciones />`
+ * en el DOM. Como el nav renderiza una copia para desktop y otra para mobile
+ * (alternadas por CSS, pero ambas presentes), esto duplicaba las peticiones
+ * cada 12s. Un store es una única instancia compartida por toda la página:
+ * ambas campanas leen el mismo estado, un solo polling.
+ *
+ * Comportamiento (sin cambios respecto al original):
  *  - Se queda "en espera" (sin hacer nada visible) mientras no hay novedades.
  *  - Cuando el backend reporta notificaciones nuevas, se actualiza la lista,
  *    sube el contador y suena un aviso corto (como una notificación de chat).
- *  - No se generan sonidos ni se molesta al usuario si nada cambió.
- *
- * No usamos WebSockets/Echo aquí: el proyecto no tiene un servidor de
- * broadcasting configurado, así que esto funciona por polling ligero
- * (cada 12s, y solo mientras la pestaña está visible). Junto con el Web
- * Push que ya existe para cuando la pestaña está cerrada, cubre el caso de
- * "me entero casi al instante" sin añadir infraestructura nueva.
+ *  - Pausa el polling mientras la pestaña no está visible.
+ *  - Además arma una cola de "toasts" (ver notification-toast.blade.php):
+ *    banners tipo push que aparecen en pantalla para cada notificación nueva,
+ *    no solo el contador de la campana.
+ *  - No usa WebSockets/Echo: no hay servidor de broadcasting configurado,
+ *    así que esto funciona por polling ligero. Junto con el Web Push que ya
+ *    existe para cuando la pestaña está cerrada, cubre el caso de "me entero
+ *    casi al instante" sin añadir infraestructura nueva.
  */
 
 const INTERVALO_MS = 12000;
@@ -64,18 +72,27 @@ function formatoRelativo(fechaIso) {
     return `hace ${dias} d`;
 }
 
-export default function notificacionesCampana() {
-    return {
-        abierto: false,
+/**
+ * Registra el store una sola vez, en el evento 'alpine:init'
+ * (se llama desde app.js antes de Alpine.start()).
+ */
+export function registrarStoreNotificaciones(Alpine) {
+    Alpine.store('notificaciones', {
         cargando: true,
         primeraCarga: true,
         notificaciones: [],
         noLeidas: 0,
 
+        // Cola de banners tipo "push" (ver notification-toast.blade.php).
+        // Independiente de `notificaciones` (que alimenta la campana):
+        // acá solo entran las que son nuevas desde el último chequeo.
+        toasts: [],
+        _idsConocidos: new Set(),
+
         init() {
             this.consultar();
 
-            this.temporizador = setInterval(() => {
+            setInterval(() => {
                 if (!document.hidden) this.consultar();
             }, INTERVALO_MS);
 
@@ -94,8 +111,15 @@ export default function notificacionesCampana() {
                 const data = await res.json();
                 const huboNuevas = !this.primeraCarga && data.no_leidas > this.noLeidas;
 
+                if (!this.primeraCarga) {
+                    data.notificaciones
+                        .filter((n) => !n.leida_at && !this._idsConocidos.has(n.id))
+                        .forEach((n) => this.encolarToast(n));
+                }
+
                 this.notificaciones = data.notificaciones;
                 this.noLeidas = data.no_leidas;
+                this._idsConocidos = new Set(data.notificaciones.map((n) => n.id));
                 this.cargando = false;
                 this.primeraCarga = false;
 
@@ -104,6 +128,19 @@ export default function notificacionesCampana() {
                 // Sin conexión momentánea: se queda "en espera" y reintenta
                 // en el siguiente ciclo, sin romper la interfaz.
             }
+        },
+
+        encolarToast(notificacion) {
+            const toast = { ...notificacion, _key: `${notificacion.id}-${Date.now()}` };
+            this.toasts.push(toast);
+
+            setTimeout(() => {
+                this.toasts = this.toasts.filter((t) => t._key !== toast._key);
+            }, 7000);
+        },
+
+        cerrarToast(key) {
+            this.toasts = this.toasts.filter((t) => t._key !== key);
         },
 
         formatoFecha(fecha) {
@@ -137,5 +174,5 @@ export default function notificacionesCampana() {
                 },
             });
         },
-    };
+    });
 }

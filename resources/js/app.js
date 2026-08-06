@@ -1,10 +1,12 @@
 
 
 import Alpine from 'alpinejs';
-import notificacionesCampana from './notificaciones';
+import { registrarStoreNotificaciones } from './notificaciones';
 
 window.Alpine = Alpine;
 
-Alpine.data('notificacionesCampana', notificacionesCampana);
+document.addEventListener('alpine:init', () => {
+    registrarStoreNotificaciones(Alpine);
+});
 
 Alpine.start();

@@ -1,4 +1,4 @@
-<div x-data="notificacionesCampana()" x-init="init()" class="relative">
+<div x-data="{ abierto: false }" class="relative">
 
     {{-- Icono --}}
     <button
@@ -8,7 +8,7 @@
                bg-white/40 backdrop-blur-md border border-white/50 shadow-sm
                text-gray-600 hover:text-gray-900 hover:bg-white/60
                transition-all duration-200"
-        :class="noLeidas > 0 && 'animate-[pulse_2s_ease-in-out_1]'"
+        :class="$store.notificaciones.noLeidas > 0 && 'animate-[pulse_2s_ease-in-out_1]'"
     >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
@@ -18,9 +18,9 @@
         </svg>
 
         <span
-            x-show="noLeidas > 0"
+            x-show="$store.notificaciones.noLeidas > 0"
             x-transition.scale
-            x-text="noLeidas > 9 ? '9+' : noLeidas"
+            x-text="$store.notificaciones.noLeidas > 9 ? '9+' : $store.notificaciones.noLeidas"
             class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center
                    rounded-full bg-rose-500 text-white text-[10px] font-semibold
                    ring-2 ring-white/80"
@@ -45,8 +45,8 @@
         <div class="flex items-center justify-between px-4 py-3 border-b border-white/40">
             <span class="text-sm font-semibold text-gray-800">Notificaciones</span>
             <button
-                x-show="noLeidas > 0"
-                @click="marcarTodas()"
+                x-show="$store.notificaciones.noLeidas > 0"
+                @click="$store.notificaciones.marcarTodas()"
                 class="text-xs font-medium text-blue-600 hover:text-blue-800 transition"
             >
                 Marcar todas leídas
@@ -54,20 +54,20 @@
         </div>
 
         <div class="max-h-96 overflow-y-auto divide-y divide-white/40">
-            <template x-if="cargando">
+            <template x-if="$store.notificaciones.cargando">
                 <div class="px-4 py-8 text-center text-sm text-gray-400">Cargando…</div>
             </template>
 
-            <template x-if="!cargando && notificaciones.length === 0">
+            <template x-if="!$store.notificaciones.cargando && $store.notificaciones.notificaciones.length === 0">
                 <div class="px-4 py-8 text-center text-sm text-gray-400">
                     Sin notificaciones por ahora
                 </div>
             </template>
 
-            <template x-for="n in notificaciones" :key="n.id">
+            <template x-for="n in $store.notificaciones.notificaciones" :key="n.id">
                 <a
                     :href="n.papeleta_id ? `/papeletas/${n.papeleta_id}` : '#'"
-                    @click="marcarLeida(n)"
+                    @click="$store.notificaciones.marcarLeida(n)"
                     class="flex gap-3 px-4 py-3 hover:bg-white/60 transition-colors"
                     :class="!n.leida_at && 'bg-blue-50/50'"
                 >
@@ -79,7 +79,7 @@
                     <div class="min-w-0">
                         <p class="text-sm font-medium text-gray-800 truncate" x-text="n.titulo"></p>
                         <p class="text-xs text-gray-500 line-clamp-2" x-text="n.mensaje"></p>
-                        <p class="text-[11px] text-gray-400 mt-0.5" x-text="formatoFecha(n.created_at)"></p>
+                        <p class="text-[11px] text-gray-400 mt-0.5" x-text="$store.notificaciones.formatoFecha(n.created_at)"></p>
                     </div>
                 </a>
             </template>

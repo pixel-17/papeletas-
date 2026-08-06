@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PapeletaController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SedeController;
+use App\Http\Controllers\LiveCheckController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ---------- Panel y catálogos: solo ADMINISTRADOR ----------
     Route::middleware(['role:ADMINISTRADOR'])->group(function () {
+        Route::get('/admin/live-check/{tabla}', LiveCheckController::class)->name('admin.live-check');
         Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');
 
         Route::resource('areas', AreaController::class)->except(['show']);

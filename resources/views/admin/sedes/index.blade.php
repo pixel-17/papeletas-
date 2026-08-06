@@ -2,13 +2,21 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Sedes</h2>
-            <a href="{{ route('sedes.create') }}" class="bg-blue-600 text-white text-sm px-3 py-2 rounded">+ Nueva</a>
+            <a href="{{ route('sedes.create') }}"
+               class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Nueva
+            </a>
         </div>
     </x-slot>
 
-    <div class="bg-white rounded shadow overflow-x-auto">
+    <x-live-refresh-banner tabla="sedes" :count="$sedes->total()" />
+
+    <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-left text-gray-500">
+            <thead class="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
                 <tr>
                     <th class="p-3">Nombre</th>
                     <th class="p-3 hidden sm:table-cell">Dirección</th>
@@ -17,29 +25,25 @@
                     <th class="p-3"></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y">
                 @forelse($sedes as $sede)
-                    <tr class="border-t">
-                        <td class="p-3">{{ $sede->nombre }}</td>
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 font-medium text-gray-800">{{ $sede->nombre }}</td>
                         <td class="p-3 hidden sm:table-cell text-gray-500">{{ $sede->direccion ?? '—' }}</td>
                         <td class="p-3 hidden sm:table-cell text-gray-500">{{ $sede->radio_permitido }} m</td>
-                        <td class="p-3">
-                            <span class="text-xs px-2 py-1 rounded {{ $sede->estado ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-                                {{ $sede->estado ? 'Activa' : 'Inactiva' }}
-                            </span>
-                        </td>
-                        <td class="p-3 text-right space-x-2 whitespace-nowrap">
-                            <a href="{{ route('sedes.edit', $sede) }}" class="text-blue-600">Editar</a>
+                        <td class="p-3"><x-active-badge :activo="$sede->estado" textoActivo="Activa" textoInactivo="Inactiva" /></td>
+                        <td class="p-3 text-right space-x-3 whitespace-nowrap">
+                            <a href="{{ route('sedes.edit', $sede) }}" class="text-blue-600 hover:text-blue-800 font-medium">Editar</a>
                             @if($sede->estado)
                                 <form method="POST" action="{{ route('sedes.destroy', $sede) }}" class="inline">
                                     @csrf @method('DELETE')
-                                    <button class="text-red-600" onclick="return confirm('¿Desactivar esta sede?')">Desactivar</button>
+                                    <button class="text-red-500 hover:text-red-700" onclick="return confirm('¿Desactivar esta sede?')">Desactivar</button>
                                 </form>
                             @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="p-6 text-center text-gray-500">No hay sedes registradas.</td></tr>
+                    <tr><td colspan="5" class="p-10 text-center text-gray-400 text-sm">No hay sedes registradas.</td></tr>
                 @endforelse
             </tbody>
         </table>
