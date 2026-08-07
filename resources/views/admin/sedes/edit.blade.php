@@ -1,40 +1,40 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Editar Sede</h2>
+        <h2 class="font-bold text-2xl text-gray-800 tracking-tight">Editar Sede</h2>
     </x-slot>
 
-    <form method="POST" action="{{ route('sedes.update', $sede) }}" class="bg-white rounded-lg shadow-sm p-5 space-y-4 max-w-lg">
+    <form method="POST" action="{{ route('sedes.update', $sede) }}" class="glass-panel p-6 space-y-4 max-w-lg animate-fade-in-up">
         @csrf @method('PUT')
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-            <input type="text" name="nombre" required value="{{ old('nombre', $sede->nombre) }}" class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <label class="block font-semibold text-sm text-gray-600 mb-1.5">Nombre</label>
+            <input type="text" name="nombre" required value="{{ old('nombre', $sede->nombre) }}" class="input-glass">
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-            <input type="text" name="direccion" value="{{ old('direccion', $sede->direccion) }}" class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <label class="block font-semibold text-sm text-gray-600 mb-1.5">Dirección</label>
+            <input type="text" name="direccion" value="{{ old('direccion', $sede->direccion) }}" class="input-glass">
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Latitud</label>
-                <input type="number" step="any" name="latitud" required value="{{ old('latitud', $sede->latitud) }}" class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <label class="block font-semibold text-sm text-gray-600 mb-1.5">Latitud</label>
+                <input type="number" step="any" name="latitud" required value="{{ old('latitud', $sede->latitud) }}" class="input-glass">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Longitud</label>
-                <input type="number" step="any" name="longitud" required value="{{ old('longitud', $sede->longitud) }}" class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <label class="block font-semibold text-sm text-gray-600 mb-1.5">Longitud</label>
+                <input type="number" step="any" name="longitud" required value="{{ old('longitud', $sede->longitud) }}" class="input-glass">
             </div>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Radio permitido (metros)</label>
-            <input type="number" name="radio_permitido" required value="{{ old('radio_permitido', $sede->radio_permitido) }}" class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <label class="block font-semibold text-sm text-gray-600 mb-1.5">Radio permitido (metros)</label>
+            <input type="number" name="radio_permitido" required value="{{ old('radio_permitido', $sede->radio_permitido) }}" class="input-glass">
         </div>
         <div class="flex items-center gap-2">
             <input type="hidden" name="estado" value="0">
-            <input type="checkbox" name="estado" value="1" id="estado" class="rounded" @checked(old('estado', $sede->estado))>
+            <input type="checkbox" name="estado" value="1" id="estado" class="rounded border-gray-300 text-brand-600 focus:ring-brand-400" @checked(old('estado', $sede->estado))>
             <label for="estado" class="text-sm text-gray-700">Activa</label>
         </div>
         <div class="flex gap-3 pt-1">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition">Actualizar</button>
-            <a href="{{ route('sedes.index') }}" class="text-gray-500 hover:text-gray-700 px-4 py-2.5 text-sm">Cancelar</a>
+            <button type="submit" class="btn-primary">Actualizar</button>
+            <a href="{{ route('sedes.index') }}" class="text-gray-500 hover:text-gray-800 px-4 py-2.5 text-sm font-medium transition-colors">Cancelar</a>
         </div>
     </form>
 </x-app-layout>

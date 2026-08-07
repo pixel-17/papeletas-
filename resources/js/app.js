@@ -2,6 +2,7 @@
 
 import Alpine from 'alpinejs';
 import { registrarStoreNotificaciones } from './notificaciones';
+import './progress-bar';
 
 window.Alpine = Alpine;
 

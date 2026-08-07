@@ -11,12 +11,12 @@
     <div x-show="hayNovedades"
          x-cloak
          x-transition
-         class="mb-3 flex items-center justify-between bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-2.5">
+         class="mb-3 flex items-center justify-between glass-card !rounded-xl border-l-4 !border-l-brand-400 text-brand-800 text-sm px-4 py-3">
         <span class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
             Hay cambios nuevos en esta lista.
         </span>
-        <button @click="window.location.reload()" class="font-medium hover:underline shrink-0">
+        <button @click="window.location.reload()" class="font-semibold hover:underline shrink-0">
             Actualizar
         </button>
     </div>

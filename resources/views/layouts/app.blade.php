@@ -9,12 +9,27 @@
 
     {{-- PWA: instalable en el celular/escritorio --}}
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#3b6cf6">
     <link rel="icon" href="/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Papeletas">
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+
+    <script>
+        // Se aplica ANTES de pintar la página para evitar el parpadeo de tema
+        // (flash of wrong theme) al navegar entre páginas server-rendered.
+        (function () {
+            const guardado = localStorage.getItem('tema');
+            const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (guardado === 'oscuro' || (!guardado && prefiereOscuro)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
     <script>
         window.VAPID_PUBLIC_KEY = "{{ config('webpush.vapid.public_key') }}";
@@ -29,30 +44,33 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="app-bg font-sans antialiased text-gray-800">
 
     <x-notification-toast />
 
     @include('layouts.navigation')
 
     @if (isset($header))
-        <header class="bg-white shadow">
-            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6">
+        <header class="relative z-10">
+            <div class="max-w-5xl mx-auto py-6 px-4 sm:px-6">
                 {{ $header }}
             </div>
         </header>
     @endif
 
-    <main class="max-w-5xl mx-auto p-4">
+    <main class="relative z-10 max-w-5xl mx-auto p-4 pb-16">
         @if (session('status'))
-            <div class="bg-green-100 text-green-800 text-sm p-3 rounded mb-4">
+            <div class="glass-card border-l-4 !border-l-emerald-400 text-emerald-700 text-sm p-4 mb-4 animate-fade-in-up flex items-center gap-2">
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 {{ session('status') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="bg-red-100 text-red-800 text-sm p-3 rounded mb-4">
-                <ul class="list-disc pl-4">
+            <div class="glass-card border-l-4 !border-l-rose-400 text-rose-700 text-sm p-4 mb-4 animate-fade-in-up">
+                <ul class="list-disc pl-4 space-y-0.5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach

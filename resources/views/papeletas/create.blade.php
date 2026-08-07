@@ -1,29 +1,38 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Nueva Papeleta</h2>
+        <h2 class="font-bold text-2xl text-gray-800 tracking-tight">Nueva Papeleta</h2>
     </x-slot>
 
     @if(auth()->user()->sede)
-        <div class="bg-blue-50 border border-blue-100 text-sm text-blue-800 rounded p-3 mb-4">
-            Tu sede asignada es <strong>{{ auth()->user()->sede->nombre }}</strong>
-            @if(auth()->user()->sede->direccion)
-                ({{ auth()->user()->sede->direccion }})
-            @endif.
-            Cuando marques tu salida/retorno por GPS, se compara contra este punto
-            (radio permitido: {{ auth()->user()->sede->radio_permitido }} m).
+        <div class="glass-card border-l-4 !border-l-brand-400 text-sm text-brand-800 p-4 mb-4 animate-fade-in-up flex gap-2.5">
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            <div>
+                Tu sede asignada es <strong>{{ auth()->user()->sede->nombre }}</strong>
+                @if(auth()->user()->sede->direccion)
+                    ({{ auth()->user()->sede->direccion }})
+                @endif.
+                Cuando marques tu salida/retorno por GPS, se compara contra este punto
+                (radio permitido: {{ auth()->user()->sede->radio_permitido }} m).
+            </div>
         </div>
     @else
-        <div class="bg-amber-50 border border-amber-100 text-sm text-amber-800 rounded p-3 mb-4">
+        <div class="glass-card border-l-4 !border-l-amber-400 text-sm text-amber-800 p-4 mb-4 animate-fade-in-up flex gap-2.5">
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
             Todavía no tienes una sede asignada — consulta con RRHH antes de marcar tu GPS.
         </div>
     @endif
 
-    <form method="POST" action="{{ route('papeletas.store') }}" class="bg-white rounded shadow p-4 space-y-4">
+    <form method="POST" action="{{ route('papeletas.store') }}" class="glass-panel p-6 space-y-5 animate-fade-in-up">
         @csrf
 
         <div>
-            <label class="block text-sm font-medium mb-1">Motivo</label>
-            <select name="motivo_id" required class="w-full border rounded p-2">
+            <x-input-label value="Motivo" />
+            <select name="motivo_id" required class="input-glass">
                 <option value="">Selecciona un motivo</option>
                 @foreach(\App\Models\Motivo::activos()->orderBy('nombre')->get() as $motivo)
                     <option value="{{ $motivo->id }}" @selected(old('motivo_id') == $motivo->id)>
@@ -34,34 +43,34 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium mb-1">Destino</label>
+            <x-input-label value="Destino" />
             <input type="text" name="destino" required value="{{ old('destino') }}"
-                   class="w-full border rounded p-2" placeholder="Ej: Municipalidad Provincial">
+                   class="input-glass" placeholder="Ej: Municipalidad Provincial">
         </div>
 
         <div>
-            <label class="block text-sm font-medium mb-1">Detalle (opcional)</label>
-            <textarea name="motivo_detalle" rows="3" class="w-full border rounded p-2">{{ old('motivo_detalle') }}</textarea>
+            <x-input-label value="Detalle (opcional)" />
+            <textarea name="motivo_detalle" rows="3" class="input-glass">{{ old('motivo_detalle') }}</textarea>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-                <label class="block text-sm font-medium mb-1">Fecha</label>
+                <x-input-label value="Fecha" />
                 <input type="date" name="fecha_salida" id="fecha_salida" required
                        min="{{ now()->toDateString() }}" value="{{ old('fecha_salida') }}"
-                       class="w-full border rounded p-2">
+                       class="input-glass">
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1">Hora salida</label>
+                <x-input-label value="Hora salida" />
                 <input type="time" name="hora_salida_programada" id="hora_salida_programada" required
                        value="{{ old('hora_salida_programada') }}"
-                       class="w-full border rounded p-2">
-                <p id="hora-hint" class="text-[11px] text-gray-400 mt-1"></p>
+                       class="input-glass">
+                <p id="hora-hint" class="text-[11px] text-gray-400 mt-1.5"></p>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1">Hora retorno</label>
+                <x-input-label value="Hora retorno" />
                 <input type="time" name="hora_retorno_programada" value="{{ old('hora_retorno_programada') }}"
-                       class="w-full border rounded p-2">
+                       class="input-glass">
             </div>
         </div>
 
@@ -94,11 +103,11 @@
             })();
         </script>
 
-        <div class="flex gap-2 pt-2">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full sm:w-auto">
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="btn-primary w-full sm:w-auto">
                 Enviar solicitud
             </button>
-            <a href="{{ route('papeletas.index') }}" class="text-gray-600 px-4 py-2">Cancelar</a>
+            <a href="{{ route('papeletas.index') }}" class="btn-secondary w-full sm:w-auto justify-center">Cancelar</a>
         </div>
     </form>
 </x-app-layout>

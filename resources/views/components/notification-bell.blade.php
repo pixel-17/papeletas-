@@ -6,7 +6,7 @@
     - Clic en una notificación la marca como leída y navega a la papeleta.
 --}}
 <div x-data="notificacionesBell()" x-init="init()" class="relative">
-    <button @click="abierto = !abierto" class="relative p-2 rounded-full hover:bg-gray-100 transition">
+    <button @click="abierto = !abierto" class="relative p-2 rounded-full glass hover:bg-white/70 transition-all duration-200">
         <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
         </svg>
@@ -21,16 +21,16 @@
          x-cloak
          @click.away="abierto = false"
          x-transition
-         class="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white rounded-lg shadow-xl border z-50">
+         class="absolute right-0 mt-2 w-80 max-w-[90vw] glass-strong rounded-2xl shadow-glass-lg z-50">
 
-        <div class="flex justify-between items-center px-4 py-3 border-b">
+        <div class="flex justify-between items-center px-4 py-3 border-b border-white/40">
             <span class="font-semibold text-sm">Notificaciones</span>
             <button @click="marcarTodasLeidas()" x-show="noLeidas > 0" class="text-xs text-blue-600 hover:underline">
                 Marcar todas como leídas
             </button>
         </div>
 
-        <div class="max-h-96 overflow-y-auto divide-y">
+        <div class="max-h-96 overflow-y-auto divide-y divide-white/40">
             <template x-if="items.length === 0">
                 <p class="text-center text-sm text-gray-400 py-8">No tienes notificaciones.</p>
             </template>
@@ -38,7 +38,7 @@
             <template x-for="item in items" :key="item.id">
                 <a :href="item.papeleta_id ? `/papeletas/${item.papeleta_id}` : '#'"
                    @click="marcarLeida(item)"
-                   class="block px-4 py-3 hover:bg-gray-50 transition"
+                   class="block px-4 py-3 hover:bg-white/60 transition-colors"
                    :class="!item.leida_at ? 'bg-blue-50/60' : ''">
                     <div class="flex items-start gap-2">
                         <span class="w-2 h-2 rounded-full mt-1.5 shrink-0" :class="!item.leida_at ? 'bg-blue-500' : 'bg-transparent'"></span>
